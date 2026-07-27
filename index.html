@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摆别扭 - 纯正纸牌音效版</title>
+    <style>
+        :root {
+            --mac-bg: #1e1e1e;
+            --mac-glass: rgba(255, 255, 255, 0.08);
+            --accent-blue: #0a84ff;
+            --card-width: 86px;
+            --card-height: 118px;
+            --color-red: #ff0000;   
+            --color-black: #000000; 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--mac-bg);
+            color: #f5f5f7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1040px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            background: var(--mac-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .title-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff 0%, #a5c7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .game-controls {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn:hover {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .table-container {
+            width: 100%;
+            max-width: 1040px;
+            background: radial-gradient(circle at center, #1b5334 0%, #113822 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 24px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 2px 6px rgba(0,200,100,0.1);
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            overflow-x: auto;
+        }
+
+        .column {
+            flex: 1;
+            min-width: 92px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+            height: fit-content;
+            min-height: 120px;
+            padding-bottom: 0;
+            background-color: transparent;
+            border: none;
+        }
+
+        .column.empty-highlight {
+            border: 1px dashed rgba(10, 132, 255, 0.5);
+            background-color: rgba(10, 132, 255, 0.08);
+            min-height: 140px;
+            border-radius: 8px;
+        }
+
+        .column:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+
+        /* 扑克牌样式 */
+        .card {
+            width: var(--card-width);
+            height: var(--card-height);
+            background: linear-gradient(135deg, #ffffff 0%, #f6f8fa 100%);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15);
+            user-select: none;
+            position: absolute;
+            left: 5px;
+            transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
+            border: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .card.suit-spade, .card.suit-club { color: var(--color-black); }
+        .card.suit-heart, .card.suit-diamond { color: var(--color-red); }
+
+        .card.back {
+            background: linear-gradient(135deg, #1d3557 0%, #457b9d 100%);
+            border: 2px solid #ffffff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            color: #fff;
+        }
+
+        .card.interactive {
+            cursor: pointer;
+        }
+
+        .card.interactive:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 100 !important;
+        }
+
+        .card.selected {
+            border: 2px solid var(--accent-blue) !important;
+            transform: translateY(-10px) scale(1.02) !important;
+            box-shadow: 0 0 20px rgba(10, 132, 255, 0.6), 0 8px 20px rgba(0,0,0,0.3) !important;
+            z-index: 1000 !important;
+        }
+
+        .card .top-left, .card .bottom-right {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            line-height: 1;
+            font-weight: 700;
+        }
+
+        .card .top-left { align-self: flex-start; }
+        .card .bottom-right { align-self: flex-end; transform: rotate(180deg); }
+
+        .card .corner-rank {
+            font-size: 1.15rem;
+            margin-right: 2px;
+        }
+
+        .card .corner-suit {
+            font-size: 1.25rem;
+        }
+        
+        .card .center-symbol {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.6rem;
+            opacity: 0.35;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .card.suit-diamond .corner-suit span,
+        .card.suit-diamond .center-symbol span {
+            display: inline-block;
+            transform: scaleX(1.35) scaleY(0.9);
+        }
+
+        .log-box {
+            margin-top: 15px;
+            width: 100%;
+            max-width: 1040px;
+            background: var(--mac-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        /* 弹窗模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: #2c2c2e;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 90%;
+            max-width: 750px;
+            max-height: 85vh;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .modal-close:hover {
+            background: var(--accent-blue);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #d1d1d6;
+        }
+
+        .rule-section {
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 14px 16px;
+            border-radius: 10px;
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .rule-section h3 {
+            font-size: 1.05rem;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+
+        .bilingual-text {
+            margin-bottom: 8px;
+        }
+
+        .zh {
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .en {
+            font-size: 0.85rem;
+            color: #8e8e93;
+            margin-top: 2px;
+        }
+
+        .rule-list {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 6px;
+        }
+
+        .rule-list li {
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-container">
+            <h1>摆别扭</h1>
+        </div>
+        <div class="game-controls">
+            <button class="btn" id="rule-btn">游戏说明</button>
+            <button class="btn" id="sound-toggle-btn">音效: 开</button>
+            <button class="btn" id="restart-btn">重新开始</button>
+        </div>
+    </header>
+
+    <div class="table-container" id="table-container"></div>
+
+    <div class="log-box" id="log-box">
+        游戏已开始，已采用全套仿真纸牌摩擦与落桌物理音效
+    </div>
+
+    <!-- 游戏规则说明弹窗模态框 -->
+    <div class="modal-overlay" id="rule-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>游戏规则说明 / Game Rules & Instructions</h2>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                
+                <div class="rule-section">
+                    <h3>一、 游戏目标 / Game Objective</h3>
+                    <div class="bilingual-text">
+                        <div class="zh">将一副打乱的扑克牌（52张）全部按同花色从 A 到 K 的顺序顺连整理，并最终从桌面全部回收消除。桌面所有牌收完即通关。</div>
+                        <div class="en">Arrange and clear a shuffled deck of 52 cards into sequential order by suit from A to K. Clear all cards from the table to win.</div>
+                    </div>
+                </div>
+
+                <div class="rule-section">
+                    <h3>二、 牌面布局 / Layout</h3>
+                    <div class="bilingual-text">
+                        <div class="zh">开局分发至 7 个纵向列。底部为明牌（正面朝上），上方压着的为暗牌（背面朝上）。使用全套黑桃、梅花、红桃、方片。</div>
+                        <div class="en">Cards are dealt into 7 columns. Bottom cards face up; covered cards face down. Uses all 4 suits: Spades, Clubs, Hearts, and Diamonds.</div>
+                    </div>
+                </div>
+
+                <div class="rule-section">
+                    <h3>三、 核心移动规则 / Core Movement Rules</h3>
+                    <ul class="rule-list">
+                        <li>
+                            <div class="zh"><strong>单张移动：</strong>点数小 1 且同花色的明牌，可移动到大 1 的同花色牌下方。</div>
+                            <div class="en"><strong>Single Card:</strong> A card can move onto a card of the same suit that is 1 rank higher.</div>
+                        </li>
+                        <li>
+                            <div class="zh"><strong>多张连牌移动：</strong>同列中已排好序的同花色连牌组可整体拖动。</div>
+                            <div class="en"><strong>Sequential Groups:</strong> Properly sequenced same-suit card groups can be moved together.</div>
+                        </li>
+                        <li>
+                            <div class="zh"><strong>空列规则：</strong>空列仅允许 K（国王）或以 K 开头的合法连牌组入驻。</div>
+                            <div class="en"><strong>Empty Columns:</strong> Only a King (K) or a sequence starting with K can fill an empty column.</div>
+                        </li>
+                        <li>
+                            <div class="zh"><strong>翻开暗牌：</strong>明牌移走后，其上方的暗牌会自动翻开。</div>
+                            <div class="en"><strong>Revealing Cards:</strong> When a face-up card is moved away, the hidden card beneath it automatically flips face up.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="rule-section">
+                    <h3>四、 自动回收机制 / Auto-Collection</h3>
+                    <div class="bilingual-text">
+                        <div class="zh">当某列底部凑齐从 A 到 K（同花色）的完整序列时，系统自动回收并消除。</div>
+                        <div class="en">When a complete sequence from A to K of the same suit forms at the bottom of a column, the system automatically collects and clears it.</div>
+                    </div>
+                </div>
+
+                <div class="rule-section">
+                    <h3>五、 新手建议 / Beginner Tips</h3>
+                    <ul class="rule-list">
+                        <li>
+                            <div class="zh">优先移动明牌去解锁并翻开被压住的暗牌。</div>
+                            <div class="en">Prioritize moving face-up cards to reveal hidden cards underneath.</div>
+                        </li>
+                        <li>
+                            <div class="zh">同花色接龙能保证牌组保持整体可移动性。</div>
+                            <div class="en">Sticking to same-suit builds keeps your card groups fully movable.</div>
+                        </li>
+                        <li>
+                            <div class="zh">空列非常珍贵，切勿轻易填满。</div>
+                            <div class="en">Empty columns are extremely valuable; do not fill them up carelessly.</div>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 纸牌物理音效合成引擎 (使用 Web Audio API 合成拟真纸牌弹击、摩擦与落桌声)
+        class CardSoundManager {
+            constructor() {
+                this.enabled = true;
+                this.ctx = null;
+            }
+
+            initContext() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            // 生成带噪声的纸牌摩擦/弹击声（用于摸牌、翻牌、选中）
+            playCardSnap() {
+                if (!this.enabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                
+                // 用短白噪声模拟纸牌纤维摩擦
+                const bufferSize = this.ctx.sampleRate * 0.03; // 30毫秒极短噪声
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(1800, now); // 纸牌特有的清脆高频
+                filter.Q.setValueAtTime(3, now);
+
+                const gain = this.ctx.createGain();
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.03);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                noise.start(now);
+            }
+
+            // 纸牌拍在桌面上的沉稳闷响（落桌声）
+            playCardSlap() {
+                if (!this.enabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                // 模拟纸牌平拍到绿呢桌面上独特的低频木质闷响
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.exponentialRampToValueAtTime(35, now + 0.08);
+
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+
+            // 顺连回收成束纸牌滑动的清脆哗啦声
+            playCardCollect() {
+                if (!this.enabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                // 快速连续触发4次纸牌弹击，模拟整副牌收拢滑过桌面的声音
+                for (let i = 0; i < 4; i++) {
+                    setTimeout(() => {
+                        this.playCardSnap();
+                    }, i * 45);
+                }
+            }
+
+            // 犯规/错误提示（使用沉闷低音，不破坏纸牌氛围）
+            playCardError() {
+                if (!this.enabled) return;
+                this.initContext();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(90, now);
+                osc.frequency.setValueAtTime(60, now + 0.08);
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+        }
+
+        const sound = new CardSoundManager();
+
+        // 音效按钮绑定
+        const soundBtn = document.getElementById('sound-toggle-btn');
+        soundBtn.onclick = () => {
+            sound.enabled = !sound.enabled;
+            soundBtn.innerText = `音效: ${sound.enabled ? '开' : '关'}`;
+            if (sound.enabled) sound.playCardSnap();
+        };
+
+        // 规则弹窗控制逻辑
+        const ruleBtn = document.getElementById('rule-btn');
+        const ruleModal = document.getElementById('rule-modal');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        ruleBtn.onclick = () => {
+            sound.playCardSnap();
+            ruleModal.classList.add('active');
+        };
+
+        modalCloseBtn.onclick = () => {
+            sound.playCardSnap();
+            ruleModal.classList.remove('active');
+        };
+
+        ruleModal.onclick = (e) => {
+            if (e.target === ruleModal) {
+                ruleModal.classList.remove('active');
+            }
+        };
+
+
+        let gameState = {
+            columns: [],
+            selectedCardInfo: null
+        };
+
+        const rankMap = { 'A':1, '2':2, '3':3, '4':4, '5':5, '6':6, '7':7, '8':8, '9':9, '10':10, 'J':11, 'Q':12, 'K':13 };
+
+        function initGame() {
+            sound.initContext();
+            gameState.selectedCardInfo = null;
+            document.getElementById('log-box').innerText = `新游戏开始`;
+            createGameLayout();
+            renderTable();
+            checkAndRemoveValidSequences(); 
+        }
+
+        function createGameLayout() {
+            const allSuits = [
+                { symbol: '♠', name: 'spade', colorClass: 'suit-spade' },
+                { symbol: '♣', name: 'club', colorClass: 'suit-club' },
+                { symbol: '♥', name: 'heart', colorClass: 'suit-heart' },
+                { symbol: '♦', name: 'diamond', colorClass: 'suit-diamond' }
+            ];
+            const allRanks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+            
+            let deck = [];
+            for(let s of allSuits) {
+                for(let r of allRanks) {
+                    deck.push({ suit: s.symbol, suitName: s.name, colorClass: s.colorClass, rank: r, val: rankMap[r] });
+                }
+            }
+
+            deck.sort(() => Math.random() - 0.5);
+
+            const columnsConfig = [
+                { backCount: 0, faceCount: 1 }, 
+                { backCount: 1, faceCount: 5 }, 
+                { backCount: 2, faceCount: 5 }, 
+                { backCount: 3, faceCount: 5 }, 
+                { backCount: 4, faceCount: 5 }, 
+                { backCount: 5, faceCount: 5 }, 
+                { backCount: 6, faceCount: 5 }, 
+            ];
+
+            gameState.columns = [];
+            for (let cfg of columnsConfig) {
+                let colCards = [];
+                for (let i = 0; i < cfg.backCount; i++) {
+                    let card = deck.pop();
+                    colCards.push({ type: 'back', ...card });
+                }
+                for (let i = 0; i < cfg.faceCount; i++) {
+                    let card = deck.pop();
+                    colCards.push({ type: 'face', ...card });
+                }
+                gameState.columns.push(colCards);
+            }
+        }
+
+        function renderTable() {
+            const container = document.getElementById('table-container');
+            container.innerHTML = '';
+
+            gameState.columns.forEach((colCards, colIdx) => {
+                const colDiv = document.createElement('div');
+                colDiv.className = `column ${colCards.length === 0 ? 'empty-highlight' : ''}`;
+                
+                let currentTop = 0;
+                colCards.forEach((cardObj) => {
+                    let step = (cardObj.type === 'back') ? 32 : 46;
+                    currentTop += step;
+                });
+                let totalHeight = (colCards.length > 0) ? (currentTop - (colCards[colCards.length-1].type === 'back' ? 32 : 46) + 118) : 140;
+                colDiv.style.height = `${totalHeight}px`;
+
+                colDiv.onclick = (e) => {
+                    if (gameState.selectedCardInfo) {
+                        tryMoveCard(colIdx);
+                    }
+                };
+
+                currentTop = 0;
+                colCards.forEach((cardObj, cardIdx) => {
+                    const cardEl = document.createElement('div');
+                    
+                    if (cardObj.type === 'back') {
+                        cardEl.className = 'card back interactive';
+                        cardEl.style.top = `${currentTop}px`;
+                        currentTop += 32;
+                        cardEl.onclick = (e) => {
+                            e.stopPropagation();
+                            handleBackCardClick(cardEl, cardObj);
+                        };
+                    } else {
+                        let isSelected = gameState.selectedCardInfo && 
+                                         gameState.selectedCardInfo.colIndex === colIdx && 
+                                         gameState.selectedCardInfo.cardIndex === cardIdx;
+                        
+                        cardEl.className = `card ${cardObj.colorClass} interactive ${isSelected ? 'selected' : ''}`;
+                        
+                        let suitHtml = cardObj.suitName === 'diamond' ? `<span>${cardObj.suit}</span>` : cardObj.suit;
+
+                        cardEl.innerHTML = `
+                            <div class="top-left">
+                                <span class="corner-rank">${cardObj.rank}</span>
+                                <span class="corner-suit">${suitHtml}</span>
+                            </div>
+                            <div class="center-symbol">${suitHtml}</div>
+                            <div class="bottom-right">
+                                <span class="corner-rank">${cardObj.rank}</span>
+                                <span class="corner-suit">${suitHtml}</span>
+                            </div>
+                        `;
+                        cardEl.style.top = `${currentTop}px`;
+                        currentTop += 46;
+                        
+                        cardEl.onclick = (e) => {
+                            e.stopPropagation();
+                            handleCardClick(colIdx, cardIdx, cardObj, cardEl);
+                        };
+                    }
+                    cardEl.style.zIndex = cardIdx + 1;
+                    colDiv.appendChild(cardEl);
+                });
+
+                container.appendChild(colDiv);
+            });
+        }
+
+        function handleCardClick(colIdx, cardIdx, cardObj, cardEl) {
+            if (gameState.selectedCardInfo && 
+                gameState.selectedCardInfo.colIndex === colIdx && 
+                gameState.selectedCardInfo.cardIndex === cardIdx) {
+                gameState.selectedCardInfo = null;
+                cardEl.classList.remove('selected');
+                document.getElementById('log-box').innerText = `已取消选择`;
+                sound.playCardSnap();
+                return;
+            }
+
+            if (!gameState.selectedCardInfo) {
+                gameState.selectedCardInfo = { colIndex: colIdx, cardIndex: cardIdx };
+                cardEl.classList.add('selected');
+                document.getElementById('log-box').innerText = `已选中: ${cardObj.suit}${cardObj.rank}（及其下方所有牌），请点击目标列`;
+                sound.playCardSnap();
+            } else {
+                tryMoveCard(colIdx);
+            }
+        }
+
+        function tryMoveCard(targetColIdx) {
+            if (!gameState.selectedCardInfo) return;
+
+            const srcColIdx = gameState.selectedCardInfo.colIndex;
+            const srcCardIdx = gameState.selectedCardInfo.cardIndex;
+            const srcCol = gameState.columns[srcColIdx];
+            const cardToMove = srcCol[srcCardIdx];
+
+            if (srcColIdx === targetColIdx) {
+                gameState.selectedCardInfo = null;
+                renderTable();
+                return;
+            }
+
+            const targetCol = gameState.columns[targetColIdx];
+
+            if (targetCol.length > 0) {
+                let targetCard = targetCol[targetCol.length - 1];
+                if (targetCard.type === 'back') {
+                    document.getElementById('log-box').innerText = `目标列底部被暗牌挡住，无法移动`;
+                    sound.playCardError();
+                    return;
+                }
+                if (targetCard.suit !== cardToMove.suit || targetCard.val !== cardToMove.val + 1) {
+                    document.getElementById('log-box').innerText = `移动规则不符：${cardToMove.suit}${cardToMove.rank} 只能移动到同花色大 1 的牌下方`;
+                    sound.playCardError();
+                    gameState.selectedCardInfo = null;
+                    renderTable();
+                    return;
+                }
+            } else {
+                if (cardToMove.rank !== 'K') {
+                    document.getElementById('log-box').innerText = `新开空列只能放置 K（国王），当前所选牌是 ${cardToMove.suit}${cardToMove.rank}`;
+                    sound.playCardError();
+                    gameState.selectedCardInfo = null;
+                    renderTable();
+                    return;
+                }
+            }
+
+            let movedCards = srcCol.splice(srcCardIdx);
+            
+            if (srcCol.length > 0 && srcCol[srcCol.length - 1].type === 'back') {
+                srcCol[srcCol.length - 1].type = 'face';
+                sound.playCardSnap(); // 翻开暗牌的纸牌弹击声
+            }
+
+            targetCol.push(...movedCards);
+            sound.playCardSlap(); // 纸牌拍桌声
+
+            document.getElementById('log-box').innerText = `成功移动牌组`;
+            gameState.selectedCardInfo = null;
+            renderTable();
+
+            setTimeout(() => {
+                checkAndRemoveValidSequences();
+            }, 300);
+        }
+
+        function checkAndRemoveValidSequences() {
+            let removedAny = false;
+
+            for (let colIdx = 0; colIdx < gameState.columns.length; colIdx++) {
+                let col = gameState.columns[colIdx];
+                if (col.length === 0) continue;
+
+                let lastCard = col[col.length - 1];
+                if (lastCard.type === 'face' && lastCard.val === 1) {
+                    let expectedVal = 1;
+                    let validCount = 0;
+
+                    for (let i = col.length - 1; i >= 0; i--) {
+                        let c = col[i];
+                        if (c.type === 'back') break; 
+                        if (c.suit === lastCard.suit && c.val === expectedVal) {
+                            validCount++;
+                            expectedVal++;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    let sliceIndex = col.length - validCount;
+                    let removedCards = col.splice(sliceIndex);
+                    removedAny = true;
+                    sound.playCardCollect(); // 顺连回收纸牌哗啦声
+                    document.getElementById('log-box').innerText = `✨ 成功回收顺连牌组：${removedCards.map(c=>c.suit+c.rank).join(' ')}`;
+
+                    if (col.length > 0 && col[col.length - 1].type === 'back') {
+                        col[col.length - 1].type = 'face';
+                    }
+                    
+                    renderTable();
+                    break;
+                }
+            }
+
+            if (removedAny) {
+                setTimeout(checkAndRemoveValidSequences, 400);
+            } else {
+                checkWinCondition();
+            }
+        }
+
+        function handleBackCardClick(cardEl, cardObj) {
+            sound.playCardSnap();
+            document.getElementById('log-box').innerText = `暗牌底牌: ${cardObj.suit}${cardObj.rank}`;
+            cardEl.style.borderColor = '#0a84ff';
+            setTimeout(() => {
+                cardEl.style.borderColor = '#ffffff';
+            }, 1500);
+        }
+
+        function checkWinCondition() {
+            let totalCards = 0;
+            for(let col of gameState.columns) {
+                totalCards += col.length;
+            }
+            if(totalCards === 0) {
+                sound.playCardCollect();
+                document.getElementById('log-box').innerText = `🎉 恭喜全部收牌通关！`;
+            }
+        }
+
+        document.getElementById('restart-btn').onclick = () => {
+            sound.playCardSnap();
+            initGame();
+        };
+
+        initGame();
+    </script>
+</body>
+</html>
