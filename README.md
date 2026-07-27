@@ -47,7 +47,7 @@
 
 1. 克隆或下载本仓库。
 2. 直接在任意现代浏览器（Chrome、Safari、Edge、Firefox）中打开 `index.html`。
-3. 点击 **"游戏说明"** 查看详情，或点击 **"音效: 开"** 切换纸牌物理音效。
+3. 点击 https://maoyincc.github.io/spider/
 
 ---
 
@@ -110,7 +110,7 @@ An elegant, minimalist, and responsive browser-based Spider Solitaire game featu
 
 1. Clone or download this repository.
 2. Open `index.html` directly in any modern web browser (Chrome, Safari, Edge, Firefox).
-3. Click **"游戏说明"** (Rules) to read details, or click **"音效: 开"** (Sound: ON) to toggle the procedural card audio.
+3. Click https://maoyincc.github.io/spider/
 
 ---
 
